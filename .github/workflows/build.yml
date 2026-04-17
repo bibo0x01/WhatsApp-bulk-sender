@@ -1,0 +1,51 @@
+name: Build (Windows + macOS)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main", "master"]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      # We are NOT code-signing/notarizing for internal usage
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      # Prevent electron-builder from trying to publish anywhere
+      EP_DRAFT: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build distributables
+        run: npm run dist
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-dist
+          path: |
+            dist-out2/**
+            dist-out/**
+            dist/**
+            dist-out2/*.exe
+            dist-out2/*.dmg
+            dist-out2/*.zip
+            dist-out2/*.blockmap
+          if-no-files-found: warn

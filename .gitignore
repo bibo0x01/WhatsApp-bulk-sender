@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+*.log
+npm-debug.log*
+
+# Build outputs
+dist/
+dist-out/
+dist-out2/
+dist-out*/
+
+# whatsapp-web.js cache/auth (local-only)
+.wwebjs_cache/
+wwebjs-auth/
