@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const QRCode = require('qrcode');
 const XLSX = require('xlsx');
 const { Client, LocalAuth } = require('whatsapp-web.js');
@@ -8,6 +9,55 @@ let mainWindow = null;
 let waClient = null;
 let waReady = false;
 let sendCancelled = false;
+
+function firstExistingPath(paths) {
+  for (const p of paths) {
+    try {
+      if (p && fs.existsSync(p)) return p;
+    } catch (_) {
+      // ignore
+    }
+  }
+  return null;
+}
+
+function detectBrowserExecutablePath() {
+  // Prefer system-installed browsers to avoid Puppeteer downloading Chromium.
+  // whatsapp-web.js will pass this path to Puppeteer.
+  if (process.platform === 'win32') {
+    const pf = process.env.ProgramFiles || 'C:\\\\Program Files';
+    const pf86 = process.env['ProgramFiles(x86)'] || 'C:\\\\Program Files (x86)';
+    const local = process.env.LocalAppData || '';
+    return firstExistingPath([
+      // Chrome
+      path.join(pf, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(pf86, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(local, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      // Edge (works fine with WhatsApp Web)
+      path.join(pf, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+      path.join(pf86, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+      path.join(local, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    ]);
+  }
+
+  if (process.platform === 'darwin') {
+    return firstExistingPath([
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+      '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    ]);
+  }
+
+  // linux
+  return firstExistingPath([
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/usr/bin/microsoft-edge',
+    '/snap/bin/chromium',
+  ]);
+}
 
 function normalizePhone(value) {
   if (value === undefined || value === null) return '';
@@ -125,12 +175,22 @@ async function connectWhatsApp() {
     return { ok: true, pending: true };
   }
 
+  const browserExecutablePath = detectBrowserExecutablePath();
+  if (!browserExecutablePath) {
+    return {
+      ok: false,
+      error:
+        "Browser not found. Please install Google Chrome or Microsoft Edge, then try again.",
+    };
+  }
+
   waClient = new Client({
     authStrategy: new LocalAuth({
       dataPath: path.join(app.getPath('userData'), 'wwebjs-auth'),
     }),
     puppeteer: {
       headless: true,
+      executablePath: browserExecutablePath,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',

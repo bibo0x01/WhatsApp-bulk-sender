@@ -1,98 +1,56 @@
 # WhatsApp Bulk Sender
 
-A desktop application for sending bulk WhatsApp messages from Excel files.
+Internal desktop app (Electron + `whatsapp-web.js`) to send WhatsApp messages in bulk from an Excel file.
 
 ## Features
 
-- **WhatsApp Connection**: Scan QR code to link your account
-- **Contact Import**: Read numbers and names from Excel files (.xlsx, .xls)
-- **Message Templates**: Use `{name}` to insert recipient's name
-- **Adjustable Delay**: Set wait time between messages
-- **Progress Tracking**: Display elapsed time, sent count, failed count
-- **Send Log**: View details of each message
+- WhatsApp login via **QR inside the app**
+- Import contacts from **Excel** (`.xlsx`, `.xls`)
+- Message template with placeholder: **`{name}`**
+- Send **one by one** with configurable delay
+- Progress: **elapsed timer**, sent/failed counters, and a send log
+- Runs **locally only** (no external server)
 
-## Requirements
+## Requirements (end users)
+
+- **Windows**: Google Chrome **or** Microsoft Edge installed (the app uses an installed browser)
+
+## Requirements (developers)
 
 - Node.js 18+
-- Windows OS
 
-## Installation
+## Excel format
+
+First sheet with columns (header names can be English or Arabic):
+
+- number (e.g. `2010...` with country code)
+- name
+
+Supported header examples:
+- Numbers: `number`, `phone`, `mobile`, `whatsapp`, `رقم`, `رقم الهاتف`, `موبايل`, `واتساب`
+- Names: `name`, `full name`, `client name`, `اسم`, `الاسم`, `اسم العميل`
+
+If headers are not recognized, the app will fallback to:
+- **1st column = number**
+- **2nd column = name**
+
+## Run (dev)
 
 ```bash
 npm install
-```
-
-## Running
-
-```bash
 npm start
 ```
 
-## How to Use
-
-### 1. Connect to WhatsApp
-
-- Click **Connect & show QR**
-- Scan the QR code using WhatsApp on your phone (Settings → Linked Devices)
-
-### 2. Load Excel File
-
-- Prepare an Excel file with two columns:
-  - **Phone Number**: With country code (e.g., 2010...)
-  - **Name**: Recipient's name
-- Example:
-
-| number | name |
-|--------|------|
-| 201012345678 | Ahmed |
-| 201098765432 | Mohamed |
-
-- Click **Choose File** and select your file
-
-### 3. Write Message
-
-- Enter your message in the **Template** field
-- Use `{name}` as placeholder for recipient name
-- Example: `Hello {name}, this is a test message`
-
-### 4. Set Delay
-
-- Specify time in seconds between messages
-- Default: 3 seconds
-
-### 5. Send
-
-- Click **Send to all**
-- Monitor progress in the bottom section
-- You can cancel anytime using **Cancel** button
-
-## Supported Excel Columns
-
-The app automatically recognizes these column names:
-
-- For numbers: `number`, `phone`, `mobile`, `whatsapp`, `رقم`, `رقم الهاتف`, `موبايل`
-- For names: `name`, `full name`, `client name`, `اسم`, `الاسم`, `اسم العميل`
-
-## Project Files
-
-- `main.js` - Electron main process
-- `preload.js` - Security bridge
-- `renderer.js` - Frontend logic
-- `index.html` - Page structure
-- `styles.css` - Styling
-
-## Build
-
-To create executable:
+## Build (Windows / macOS)
 
 ```bash
 npm run dist
 ```
 
-The executable will appear in `dist-out2` folder.
+Build outputs are written to `dist-out3/` (see `package.json` → `build.directories.output`).
 
-## Warnings
+## Notes / warnings
 
-- For internal use only
-- Ensure you have recipient consent
-- Account may be banned for excessive sending
+- Internal use only.
+- Make sure recipients consent to being contacted.
+- Bulk messaging can lead to WhatsApp account restrictions if overused.

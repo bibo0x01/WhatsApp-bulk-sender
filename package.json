@@ -22,7 +22,7 @@
     "appId": "local.internal.whatsapp-bulk-sender",
     "productName": "WhatsApp Bulk Sender",
     "directories": {
-      "output": "dist-out2"
+      "output": "dist-out3"
     },
     "files": [
       "main.js",
